@@ -1,20 +1,35 @@
 import pygame
+import ctypes
+import os
+
+# Para evitar problemas con el escalado
+ctypes.windll.user32.SetProcessDPIAware()
 
 pygame.init()
 
-# Ajustes de pantalla
-pantalla_info = pygame.display.Info()
-ANCHO = pantalla_info.current_w
-ALTO = pantalla_info.current_h
+# Centrando la ventana
+os.environ["SDL_VIDEO_CENTERED"] = "1"
 
-# Usamos SCALED para que se vea bien en todo tipo de pantallas
-PANTALLA = pygame.display.set_mode((ANCHO, ALTO), pygame.FULLSCREEN | pygame.SCALED)
+# Resolucion base 
+ANCHO_BASE = 1280
+ALTO_BASE = 720
+
+# Ventana en pantalla completa escalada
+PANTALLA = pygame.display.set_mode(
+    (ANCHO_BASE, ALTO_BASE),
+    pygame.FULLSCREEN | pygame.SCALED
+)
+
+# Ajustando pantalla a la que tenga el usuario
+info = pygame.display.Info()
+ANCHO = info.current_w
+ALTO = info.current_h
 
 # Colores
 BLANCO = (255, 255, 255)
 NARANJO = (255, 140, 0)
 
-# La configuracion global
+# Colores globales
 BRILLO = 100
 VOLUMEN = 40
 
@@ -32,6 +47,5 @@ pygame.font.init()
 FUENTE_GENERAL = pygame.font.Font(None, 60)
 FUENTE_TITULO = pygame.font.Font(None, 120)
 
-# REloj global
+# Reloj global
 RELOJ = pygame.time.Clock()
-

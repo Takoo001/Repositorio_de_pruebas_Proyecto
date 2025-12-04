@@ -1,6 +1,6 @@
 import pygame as pg
 import nivel_settings as ns
-
+from settings import PANTALLA, ANCHO_BASE, ALTO_BASE
 from jugador import Jugador
 from suelo import Suelo
 
@@ -9,19 +9,16 @@ class Nivel1:
     def iniciar(self):
         pg.init()
 
-        # Pantalla completa 
-        ventana = pg.display.set_mode((0, 0), pg.FULLSCREEN)
-        pg.display.set_caption("Nivel1")
+        # Ventana unica
+        ventana = PANTALLA
 
-        ANCHO_REAL, ALTO_REAL = ventana.get_size()
-
-        # Superficie interna
+        # Superficie  del nivel
         surface_juego = pg.Surface((ns.ANCHO_NIVEL, ns.ALTO_NIVEL))
 
-        # Cargar al pj
+        # Cargar jugador
         jugador = Jugador(100, 0)
 
-        # Posicion inicial sobre el suelo
+        # Posicions inicial sobre el suelo
         jugador.rect.bottom = ns.ALTO_NIVEL - ns.ALTO_SUELO
         jugador.hitbox.center = jugador.rect.center
         jugador.contacto_suelo = True
@@ -37,12 +34,12 @@ class Nivel1:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
-            
+
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         running = False
 
-            # Logica de la superficie (Pasto)
+            # Fondo del nivel
             surface_juego.fill(ns.BACKGROUND)
 
             teclas = pg.key.get_pressed()
@@ -50,26 +47,19 @@ class Nivel1:
 
             jugador.contacto_suelo = False
 
-            teclas = pg.key.get_pressed()
-            jugador.movimiento(teclas)
-
             for bloque in suelo.lista_suelos:
                 if jugador.hitbox.colliderect(bloque):
-
                     jugador.rect.bottom = bloque.top + 15
                     jugador.hitbox.center = jugador.rect.center
                     jugador.velocidad_y = 0
                     jugador.contacto_suelo = True
                     break
 
-
             jugador.dibujar(surface_juego)
-
-            # Dibujar piso
             suelo.dibujar_suelo(surface_juego)
 
-            # Escalar a tamaño pantalla completa (Real) segun la pantalla
-            juego_escalado = pg.transform.scale(surface_juego, (ANCHO_REAL, ALTO_REAL))
+            # Escalado 
+            juego_escalado = pg.transform.scale(surface_juego, (ANCHO_BASE, ALTO_BASE))
             ventana.blit(juego_escalado, (0, 0))
 
             pg.display.update()
