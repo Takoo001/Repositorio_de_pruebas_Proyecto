@@ -1,0 +1,10 @@
+# Pantalla Niveles
+ANCHO_NIVEL = 640
+ALTO_NIVEL = 480
+LIMITE_PANTALLA = 300
+
+# Colores
+BACKGROUND = (81, 209, 250)
+
+# Para el piso
+ALTO_SUELO = 64
