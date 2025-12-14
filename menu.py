@@ -19,7 +19,7 @@ boton_base = pygame.image.load(RUTA_BOTON)
 
 sprite_lautaro = pygame.transform.scale(
     pygame.image.load(RUTA_SPRITE_LAUTARO),
-    (920, 1100)
+    (900, 900)
 )
 
 logo_juego = pygame.image.load(RUTA_LOGO).convert_alpha()
@@ -39,8 +39,8 @@ class Boton:
         self.fuente = fuente
         self.color_texto = color_texto
 
-        self.tamano_normal = (250, 70)
-        self.tamano_zoom = (270, 80)
+        self.tamano_normal = (200, 60)
+        self.tamano_zoom = (180, 60)
 
         self.img_base = pygame.transform.scale(boton_base, self.tamano_normal)
         self.img = self.img_base
@@ -73,7 +73,6 @@ class Boton:
         texto_rect = texto_render.get_rect(center=self.rect.center)
         pantalla.blit(texto_render, texto_rect)
 
-    # <-- Modificado: ahora recibe el evento y solo ejecuta la funcion si es un click sobre el boton
     def click(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
             if self.rect.collidepoint(evento.pos):
@@ -125,9 +124,9 @@ fuente_botones = pygame.font.Font(None, 35)
 
 # Controlar ubicacion de los botones
 botones = [
-    Boton(ANCHO * 0.15, ALTO * 0.40, "JUGAR", iniciar_juego, fuente_botones),
+    Boton(ANCHO * 0.15, ALTO * 0.38, "JUGAR", iniciar_juego, fuente_botones),
     Boton(ANCHO * 0.15, ALTO * 0.48, "OPCIONES", abrir_opciones, fuente_botones),
-    Boton(ANCHO * 0.15, ALTO * 0.56, "SALIR", salir, fuente_botones),
+    Boton(ANCHO * 0.15, ALTO * 0.58, "SALIR", salir, fuente_botones),
 ]
 
 
@@ -138,8 +137,8 @@ def opciones_menu():
     panel = pygame.transform.scale(panel_opciones, (int(ANCHO * 0.42), int(ALTO * 0.55)))
     rect_panel = panel.get_rect(center=(ANCHO * 0.50, ALTO * 0.50))
 
-    slider_brillo = Slider(ANCHO * 0.47, ALTO * 0.44, BRILLO)
-    slider_volumen = Slider(ANCHO * 0.47, ALTO * 0.53, VOLUMEN)
+    slider_brillo = Slider(ANCHO * 0.44, ALTO * 0.44, BRILLO)
+    slider_volumen = Slider(ANCHO * 0.44, ALTO * 0.53, VOLUMEN)
 
     boton_volver = Boton(ANCHO * 0.50, ALTO * 0.74, "VOLVER", lambda: "volver", fuente_botones)
 
@@ -192,7 +191,7 @@ def opciones_menu():
 
 # Menu principal
 def menu():
-    panel_escalado = pygame.transform.scale(panel_menu, (350, 320))
+    panel_escalado = pygame.transform.scale(panel_menu, (300, 300))
     rect_panel = panel_escalado.get_rect(center=(ANCHO * 0.15, ALTO * 0.48))
 
     reloj = pygame.time.Clock()
@@ -226,7 +225,7 @@ def menu():
         for b in botones:
             b.dibujar(PANTALLA)
 
-        PANTALLA.blit(sprite_lautaro, sprite_lautaro.get_rect(center=(ANCHO * 0.76, ALTO * 0.50)))
+        PANTALLA.blit(sprite_lautaro, sprite_lautaro.get_rect(center=(ANCHO * 0.65, ALTO * 0.55)))
 
         oscuridad = 255 - int(BRILLO * 2.55)
         if oscuridad > 0:

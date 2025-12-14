@@ -19,7 +19,7 @@ def animacion_inicio():
     # Ubicacion de aparicion del logo de acuerdo a la pantalla
     x_logo = ANCHO // 2
     y_logo = ALTO // 2
-    y_logo_final = ALTO * 0.13 # Ubicacion final del logo
+    y_logo_final = ALTO * 0.16 # Ubicacion final del logo
 
     puntos = 0
     tiempo_puntos = 0

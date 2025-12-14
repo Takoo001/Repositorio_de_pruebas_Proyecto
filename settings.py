@@ -3,7 +3,8 @@ import ctypes
 import os
 
 # Para evitar problemas con el escalado
-ctypes.windll.user32.SetProcessDPIAware()
+# ❌ DPI Aware eliminado porque rompe laptops
+# ctypes.windll.user32.SetProcessDPIAware()
 
 pygame.init()
 
@@ -21,9 +22,9 @@ PANTALLA = pygame.display.set_mode(
 )
 
 # Ajustando pantalla a la que tenga el usuario
-info = pygame.display.Info()
-ANCHO = info.current_w
-ALTO = info.current_h
+# ⚠️ NO usar resolución real del monitor
+ANCHO = ANCHO_BASE
+ALTO = ALTO_BASE
 
 # Colores
 BLANCO = (255, 255, 255)
