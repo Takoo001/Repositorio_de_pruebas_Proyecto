@@ -1,10 +1,5 @@
 import pygame
-import ctypes
 import os
-
-# Para evitar problemas con el escalado
-# ❌ DPI Aware eliminado porque rompe laptops
-# ctypes.windll.user32.SetProcessDPIAware()
 
 pygame.init()
 
@@ -15,14 +10,10 @@ os.environ["SDL_VIDEO_CENTERED"] = "1"
 ANCHO_BASE = 1280
 ALTO_BASE = 720
 
-# Ventana en pantalla completa escalada
-PANTALLA = pygame.display.set_mode(
-    (ANCHO_BASE, ALTO_BASE),
-    pygame.FULLSCREEN | pygame.SCALED
-)
+# Ventana fullscreen 
+PANTALLA = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
-# Ajustando pantalla a la que tenga el usuario
-# ⚠️ NO usar resolución real del monitor
+# Resolucion "logica"
 ANCHO = ANCHO_BASE
 ALTO = ALTO_BASE
 
@@ -30,7 +21,7 @@ ALTO = ALTO_BASE
 BLANCO = (255, 255, 255)
 NARANJO = (255, 140, 0)
 
-# Colores globales
+# Valores globales
 BRILLO = 100
 VOLUMEN = 40
 
@@ -48,5 +39,32 @@ pygame.font.init()
 FUENTE_GENERAL = pygame.font.Font(None, 60)
 FUENTE_TITULO = pygame.font.Font(None, 120)
 
-# Reloj global
+# Reloj
 RELOJ = pygame.time.Clock()
+
+
+# Escalado, centrado y el input
+def blit_escalado(surface_origen, ventana):
+    vw, vh = ventana.get_size()
+    sw, sh = surface_origen.get_size()
+
+    escala = min(vw / sw, vh / sh)
+    nuevo_w = int(sw * escala)
+    nuevo_h = int(sh * escala)
+
+    surface_escalada = pygame.transform.scale(surface_origen, (nuevo_w, nuevo_h))
+
+    offset_x = (vw - nuevo_w) // 2
+    offset_y = (vh - nuevo_h) // 2
+
+    ventana.fill((0, 0, 0))
+    ventana.blit(surface_escalada, (offset_x, offset_y))
+
+    return escala, offset_x, offset_y
+
+
+def mouse_logico(pos_mouse, escala, ox, oy):
+    mx, my = pos_mouse
+    mx = (mx - ox) / escala
+    my = (my - oy) / escala
+    return int(mx), int(my)

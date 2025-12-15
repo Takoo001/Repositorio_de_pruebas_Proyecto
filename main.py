@@ -6,6 +6,9 @@ from settings import *
 from menu import menu
 from nivel1 import Nivel1
 
+# Carga
+SUPERFICIE_CARGA = pygame.Surface((ANCHO, ALTO))
+
 # Cargar imagenes
 logo = pygame.image.load(RUTA_LOGO).convert_alpha()
 pj_caminando = pygame.image.load(RUTA_PJ_CAMINANDO).convert_alpha()
@@ -13,13 +16,22 @@ pj_caminando = pygame.image.load(RUTA_PJ_CAMINANDO).convert_alpha()
 fuente_carga = pygame.font.Font(None, 70)
 
 
+def blit_estirado(superficie, pantalla):
+    superficie_escalada = pygame.transform.scale(
+        superficie,
+        pantalla.get_size()
+    )
+    pantalla.blit(superficie_escalada, (0, 0))
+
+
 def animacion_inicio():
     escala = 0.1
     escala_final = 1.0
-    # Ubicacion de aparicion del logo de acuerdo a la pantalla
+
+    # Ubicacion "logica" de logo
     x_logo = ANCHO // 2
     y_logo = ALTO // 2
-    y_logo_final = ALTO * 0.16 # Ubicacion final del logo
+    y_logo_final = ALTO * 0.16
 
     puntos = 0
     tiempo_puntos = 0
@@ -31,7 +43,7 @@ def animacion_inicio():
                 pygame.quit()
                 sys.exit()
 
-        PANTALLA.fill((0, 0, 0))
+        SUPERFICIE_CARGA.fill((0, 0, 0))
 
         if escala < escala_final:
             escala += 0.02
@@ -41,7 +53,7 @@ def animacion_inicio():
             (int(logo.get_width() * escala), int(logo.get_height() * escala))
         )
         rect_logo = logo_escalado.get_rect(center=(x_logo, y_logo))
-        PANTALLA.blit(logo_escalado, rect_logo)
+        SUPERFICIE_CARGA.blit(logo_escalado, rect_logo)
 
         if escala >= escala_final and y_logo > y_logo_final:
             y_logo -= 10
@@ -53,10 +65,13 @@ def animacion_inicio():
 
         texto = "Cargando" + "." * puntos
         render_carga = fuente_carga.render(texto, True, BLANCO)
-        PANTALLA.blit(render_carga, (ANCHO * 0.70, ALTO * 0.85))
+        SUPERFICIE_CARGA.blit(render_carga, (ANCHO * 0.70, ALTO * 0.85))
 
         pj_escalado = pygame.transform.scale(pj_caminando, (120, 120))
-        PANTALLA.blit(pj_escalado, (ANCHO * 0.15, ALTO * 0.78))
+        SUPERFICIE_CARGA.blit(pj_escalado, (ANCHO * 0.15, ALTO * 0.78))
+
+        # Estirando la pantalla
+        blit_estirado(SUPERFICIE_CARGA, PANTALLA)
 
         pygame.display.flip()
         RELOJ.tick(60)

@@ -1,24 +1,31 @@
 import pygame as pg
 import nivel_settings as ns
-from settings import PANTALLA, ANCHO_BASE, ALTO_BASE
+from settings import PANTALLA
 from jugador import Jugador
 from suelo import Suelo
+
+
+def blit_estirado(superficie, pantalla):
+    superficie_escalada = pg.transform.scale(
+        superficie,
+        pantalla.get_size()
+    )
+    pantalla.blit(superficie_escalada, (0, 0))
 
 
 class Nivel1:
     def iniciar(self):
         pg.init()
 
-        # Ventana unica
         ventana = PANTALLA
 
-        # Superficie  del nivel
+        # Superficie del nivel 
         surface_juego = pg.Surface((ns.ANCHO_NIVEL, ns.ALTO_NIVEL))
 
         # Cargar jugador
         jugador = Jugador(100, 0)
 
-        # Posicions inicial sobre el suelo
+        # Posicion inicial
         jugador.rect.bottom = ns.ALTO_NIVEL - ns.ALTO_SUELO
         jugador.hitbox.center = jugador.rect.center
         jugador.contacto_suelo = True
@@ -58,10 +65,8 @@ class Nivel1:
             jugador.dibujar(surface_juego)
             suelo.dibujar_suelo(surface_juego)
 
-            # Escalado 
-            juego_escalado = pg.transform.scale(surface_juego, (ANCHO_BASE, ALTO_BASE))
-            ventana.blit(juego_escalado, (0, 0))
+            blit_estirado(surface_juego, ventana)
 
-            pg.display.update()
+            pg.display.flip()
 
         pg.quit()
