@@ -21,28 +21,32 @@ class Nivel1:
         suelo = Suelo(largo_mapa)
 
         fondo_ancho = 640 * largo_mapa
-        fondo_alto = ns.ALTO_NIVEL
+
+        fondo_alto = self.pantalla.get_height()
         fondo = pg.Surface((fondo_ancho, fondo_alto))
 
         camara_x = 0
 
-        # OFFSET PARA BAJAR TODO EL NIVEL
         offset_y = self.pantalla.get_height() - ns.ALTO_NIVEL
 
-        # Enemigos
+
         for i in range(400, fondo_ancho, 400):
             enemigo = EnemigoPequeno(i, ns.ALTO_NIVEL - 64 - 64)
             enemigos_pequenos.append(enemigo)
 
-        # Fondo
         sprite_fondo = pg.image.load(
             "assets/images/fondos/ia_4.png"
         ).convert()
 
+        sprite_fondo = pg.transform.scale(
+            sprite_fondo,
+            (640, fondo_alto)
+        )
+
         for i in range(fondo_ancho // 640):
             fondo.blit(sprite_fondo, (i * 640, 0))
 
-        # Loop principal
+
         while self.running:
             self.reloj.tick(60)
 
@@ -52,16 +56,15 @@ class Nivel1:
 
             teclas = pg.key.get_pressed()
 
-            # Cámara
             camara_x = -jugador.rect.x + 300
             camara_x = max(camara_x, -(fondo_ancho - ns.ANCHO_NIVEL))
             camara_x = min(camara_x, 0)
 
             jugador.rect.x = max(0, min(jugador.rect.x, fondo_ancho - 64 - 300))
 
-            # Dibujado
             self.pantalla.fill(ns.BACKGROUND)
-            self.pantalla.blit(fondo, (camara_x, offset_y))
+
+            self.pantalla.blit(fondo, (camara_x, 0))
 
             jugador.movimiento(teclas)
             jugador.dibujar(self.pantalla, camara_x, offset_y)
