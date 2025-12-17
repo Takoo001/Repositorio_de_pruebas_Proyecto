@@ -30,7 +30,30 @@ fondo_menu = pygame.transform.scale(
 panel_menu = pygame.image.load(RUTA_PANEL_MENU)
 panel_opciones = pygame.image.load(RUTA_PANEL_MENU)
 
-boton_base = pygame.image.load(RUTA_BOTON)
+img_brillo_original = pygame.image.load(RUTA_FONDO_BRILLO).convert_alpha()
+img_volumen_original = pygame.image.load(RUTA_FONDO_VOLUMEN).convert_alpha()
+
+img_brillo = pygame.transform.scale(
+    img_brillo_original,
+    (
+        int(img_brillo_original.get_width() * ESCALA_IMG_BRILLO),
+        int(img_brillo_original.get_height() * ESCALA_IMG_BRILLO)
+    )
+)
+
+img_volumen = pygame.transform.scale(
+    img_volumen_original,
+    (
+        int(img_volumen_original.get_width() * ESCALA_IMG_VOLUMEN),
+        int(img_volumen_original.get_height() * ESCALA_IMG_VOLUMEN)
+    )
+)
+
+
+# Escala si hace falta (ajusta valores si quieres)
+img_brillo = pygame.transform.scale(img_brillo, (140, 40))
+img_volumen = pygame.transform.scale(img_volumen, (140, 40))
+
 
 sprite_lautaro = pygame.transform.scale(
     pygame.image.load(RUTA_SPRITE_LAUTARO),
@@ -46,19 +69,24 @@ pygame.mixer.music.play(-1)
 
 # Boton
 class Boton:
-    def __init__(self, x, y, texto, funcion, fuente, color_texto=(255, 255, 255)):
-        self.x = x
-        self.y = y
+    def __init__(self, x, y, ruta_img, funcion, scale=1.0):
+        self.x = int(x)
+        self.y = int(y)
         self.funcion = funcion
-        self.texto = texto
-        self.fuente = fuente
-        self.color_texto = color_texto
+        self.scale = scale
 
-        self.tamano_normal = (200, 60)
-        self.tamano_hover = (180, 60)
+        self.img_original = pygame.image.load(ruta_img).convert_alpha()
 
-        self.img_base = pygame.transform.scale(boton_base, self.tamano_normal)
-        self.img = self.img_base
+        w = int(self.img_original.get_width() * self.scale)
+        h = int(self.img_original.get_height() * self.scale)
+
+        self.img_normal = pygame.transform.scale(self.img_original, (w, h))
+        self.img_hover = pygame.transform.scale(
+            self.img_original,
+            (int(w * 0.95), int(h * 0.95))
+        )
+
+        self.img = self.img_normal
         self.rect = self.img.get_rect(center=(self.x, self.y))
         self.hovered = False
 
@@ -67,20 +95,16 @@ class Boton:
 
         if self.rect.collidepoint(MOUSE_POS):
             if not self.hovered:
-                self.img = pygame.transform.scale(self.img_base, self.tamano_hover)
+                self.img = self.img_hover
                 self.rect = self.img.get_rect(center=(self.x, self.y))
                 self.hovered = True
         else:
             if self.hovered:
-                self.img = pygame.transform.scale(self.img_base, self.tamano_normal)
+                self.img = self.img_normal
                 self.rect = self.img.get_rect(center=(self.x, self.y))
                 self.hovered = False
 
         superficie.blit(self.img, self.rect)
-
-        color = (255, 165, 0) if self.hovered else self.color_texto
-        texto_render = self.fuente.render(self.texto, True, color)
-        superficie.blit(texto_render, texto_render.get_rect(center=self.rect.center))
 
     def click(self, evento):
         if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
@@ -94,7 +118,7 @@ class Slider:
         self.x = int(x)
         self.y = int(y)
         self.valor = valor
-        self.ancho = 300
+        self.ancho = 185
         self.altura = 6
         self.rect = pygame.Rect(self.x, self.y, self.ancho, self.altura)
 
@@ -142,9 +166,27 @@ def salir():
 fuente_botones = pygame.font.Font(None, 35)
 
 botones = [
-    Boton(ANCHO * 0.15, ALTO * 0.38, "JUGAR", iniciar_juego, fuente_botones),
-    Boton(ANCHO * 0.15, ALTO * 0.48, "OPCIONES", abrir_opciones, fuente_botones),
-    Boton(ANCHO * 0.15, ALTO * 0.58, "SALIR", salir, fuente_botones),
+    Boton(
+        ANCHO * 0.15,
+        ALTO * 0.38,
+        RUTA_BOTON_JUGAR,
+        iniciar_juego,
+        scale=0.55
+    ),
+    Boton(
+        ANCHO * 0.15,
+        ALTO * 0.48,
+        RUTA_BOTON_OPCIONES,
+        abrir_opciones,
+        scale=0.55
+    ),
+    Boton(
+        ANCHO * 0.15,
+        ALTO * 0.58,
+        RUTA_BOTON_SALIR,
+        salir,
+        scale=0.55
+    ),
 ]
 
 
@@ -158,12 +200,17 @@ def opciones_menu():
     )
     rect_panel = panel.get_rect(center=(ANCHO * 0.50, ALTO * 0.50))
 
-    slider_brillo = Slider(ANCHO * 0.44, ALTO * 0.44, BRILLO)
-    slider_volumen = Slider(ANCHO * 0.44, ALTO * 0.53, VOLUMEN)
+    slider_brillo = Slider(ANCHO * 0.49, ALTO * 0.44, BRILLO)
+    slider_volumen = Slider(ANCHO * 0.49, ALTO * 0.53, VOLUMEN)
 
     boton_volver = Boton(
-        ANCHO * 0.50, ALTO * 0.74, "VOLVER", lambda: "volver", fuente_botones
+    ANCHO * 0.50,
+    ALTO * 0.74,
+    RUTA_BOTON_VOLVER,
+    lambda: "volver",
+    scale=0.75
     )
+
 
     reloj = pygame.time.Clock()
 
@@ -187,12 +234,21 @@ def opciones_menu():
         SUPERFICIE_MENU.blit(fondo_menu, (0, 0))
         SUPERFICIE_MENU.blit(panel, rect_panel)
 
-        # Textos
-        texto_brillo = fuente_botones.render("Brillo", True, (255, 255, 255))
-        SUPERFICIE_MENU.blit(texto_brillo, (ANCHO * 0.32, ALTO * 0.43))
+        # Imagen brillo
+        SUPERFICIE_MENU.blit(
+            img_brillo,
+            img_brillo.get_rect(
+            midright=(ANCHO * 0.48, ALTO * 0.44)
+        )
+    )
 
-        texto_volumen = fuente_botones.render("Volumen", True, (255, 255, 255))
-        SUPERFICIE_MENU.blit(texto_volumen, (ANCHO * 0.32, ALTO * 0.52))
+        # Imagen volumen
+        SUPERFICIE_MENU.blit(
+        img_volumen,
+        img_volumen.get_rect(
+        midright=(ANCHO * 0.48, ALTO * 0.53)
+        )
+    )
 
         # Sliders
         slider_brillo.dibujar(SUPERFICIE_MENU)
@@ -226,6 +282,17 @@ def menu():
     panel_escalado = pygame.transform.scale(panel_menu, (300, 300))
     rect_panel = panel_escalado.get_rect(center=(ANCHO * 0.15, ALTO * 0.48))
 
+    logo_menu = pygame.transform.scale(
+        logo_juego,
+        (
+            int(logo_juego.get_width() * ESCALA_LOGO_FINAL),
+            int(logo_juego.get_height() * ESCALA_LOGO_FINAL)
+        )
+    )
+    rect_logo_menu = logo_menu.get_rect(
+        center=(ANCHO // 2, int(ALTO * 0.13))
+    )
+
     reloj = pygame.time.Clock()
     pygame.event.clear()
     pygame.time.delay(200)
@@ -244,21 +311,23 @@ def menu():
 
         SUPERFICIE_MENU.blit(fondo_menu, (0, 0))
 
-        SUPERFICIE_MENU.blit(
-            logo_juego,
-            logo_juego.get_rect(center=(ANCHO // 2, int(ALTO * 0.13)))
-        )
+        # Logo
+        SUPERFICIE_MENU.blit(logo_menu, rect_logo_menu)
 
+        # Panel
         SUPERFICIE_MENU.blit(panel_escalado, rect_panel)
 
+        # Botones
         for b in botones:
             b.dibujar(SUPERFICIE_MENU)
 
+        # Sprite decorativo
         SUPERFICIE_MENU.blit(
             sprite_lautaro,
             sprite_lautaro.get_rect(center=(ANCHO * 0.65, ALTO * 0.55))
         )
 
+        # Brillo
         oscuridad = 255 - int(BRILLO * 2.55)
         if oscuridad > 0:
             overlay = pygame.Surface((ANCHO, ALTO))

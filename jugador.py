@@ -18,8 +18,8 @@ class Jugador(pg.sprite.Sprite):
 
         # Sprites principales
         self.flip = False
-        self.quieto = pg.image.load("assets/images/Lautaro_base64.png").convert_alpha()
-        self.corriendo = pg.image.load("assets/images/lautaro_corriendo.png").convert_alpha()
+        self.quieto = pg.image.load("assets/images/personajes/Lautaro_base64.png").convert_alpha()
+        self.corriendo = pg.image.load("assets/images/personajes/lautaro_corriendo.png").convert_alpha()
 
         # Dimensiones reales del sprite
         self.ancho = self.quieto.get_width()

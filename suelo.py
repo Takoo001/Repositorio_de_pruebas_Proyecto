@@ -6,7 +6,7 @@ class Suelo(pg.sprite.Sprite):
         super().__init__()
 
         # Cargar sprite del suelo
-        self.sprite_suelo = pg.image.load("assets/images/suelo_cesped.png").convert_alpha()
+        self.sprite_suelo = pg.image.load("assets/images/entorno/suelo_cesped.png").convert_alpha()
 
         self.lista_suelos = []
 
