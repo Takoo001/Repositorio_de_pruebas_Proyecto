@@ -2,20 +2,20 @@ import pygame as pg
 import nivel_settings as ns
 
 class Suelo(pg.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, largo_suelos):
         super().__init__()
 
-        # Cargar sprite del suelo
-        self.sprite_suelo = pg.image.load("assets/images/entorno/suelo_cesped.png").convert_alpha()
-
+        self.largo_suelos = largo_suelos
+        self.sprite_suelo = pg.image.load("assets/images/entorno/suelo_cesped.png")
         self.lista_suelos = []
 
-        # Crear suelo usando ALTO_SUELO del settings
-        for x in range(0, ns.ANCHO_NIVEL, 64):
-            self.lista_suelos.append(
-                pg.Rect(x, ns.ALTO_NIVEL - ns.ALTO_SUELO, 64, ns.ALTO_SUELO)
-            )
+        for x in range(0, ns.ANCHO_NIVEL * largo_suelos, 64):
+            self.lista_suelos.append(pg.Rect(x, ns.ALTO_NIVEL - 64, 64, 64))
 
-    def dibujar_suelo(self, ventana):
+    def dibujar_suelo(self, ventana, mundo_x, offset_y):
         for suelo in self.lista_suelos:
-            ventana.blit(self.sprite_suelo, suelo.topleft)
+            ventana.blit(
+                self.sprite_suelo,
+                (suelo.x + mundo_x,
+                 suelo.y + offset_y)
+            )

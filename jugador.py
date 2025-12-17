@@ -1,103 +1,184 @@
 import pygame as pg
 import nivel_settings as ns
+from entidad import Entidad
 
-class Jugador(pg.sprite.Sprite):
+class Jugador(Entidad):
     def __init__(self, x, y):
-        super().__init__()
+        super().__init__(x, y)
+        # Sprites
+        self.sprite_girando = pg.image.load("assets/images/personajes/giro_aire.png").convert_alpha()
+        self.sprite_dash = pg.image.load("assets/images/personajes/dash.png").convert_alpha()
+        self.sprite_salud = pg.image.load("assets/images/corazones/corazones_100.png").convert_alpha()
 
-        # Estadisticas del personake
-        self.estadisticas = {
-            "Vida": 100,
-            "Daño": 20
-        }
+        # Sprites barra salud:
+        self.sprites_corazones = [
+            pg.image.load("assets/images/corazones/corazones_0.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_10.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_20.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_30.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_40.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_50.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_60.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_70.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_80.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_90.png").convert_alpha(),
+            pg.image.load("assets/images/corazones/corazones_100.png").convert_alpha()
+        ]
 
-        self.velocidad = 3
-        self.velocidad_y = 0
-        self.gravedad = 1
-        self.contacto_suelo = False
+        # Recorte sprites por sus frames
+        self.frames_corriendo = self.recortar_frames(self.sprite_corriendo, 12, 64, 64)
+        self.frames_ataque = self.recortar_frames(self.sprite_ataque, 7, 64, 64)
+        self.frames_girando = self.recortar_frames(self.sprite_girando, 4, 64, 64)
+        self.frames_dasheando = self.recortar_frames(self.sprite_dash, 8, 64, 64)
 
-        # Sprites principales
-        self.flip = False
-        self.quieto = pg.image.load("assets/images/personajes/Lautaro_base64.png").convert_alpha()
-        self.corriendo = pg.image.load("assets/images/personajes/lautaro_corriendo.png").convert_alpha()
+        # Frames de Sprites Corriendo
+        self.frame_milisegundos_corriendo = 50
 
-        # Dimensiones reales del sprite
-        self.ancho = self.quieto.get_width()
-        self.altura = self.quieto.get_height()
+        # Frames de Sprite Atacando
+        self.frame_milisegundos_ataque = 10
 
-        # Sprite 
-        self.imagen = self.quieto
-        
-        # Posición y hitbox
-        self.rect = pg.Rect(x, y, self.ancho, self.altura)
-        self.hitbox = pg.Rect(self.rect.x, self.rect.y, self.ancho * 0.6, self.altura * 0.7)
-        self.hitbox.center = self.rect.center
-        
-        # Animacion
-        self.frame = 0
-        self.frames_corriendo = []
-        self.frame_milisegundos = 50
+        # Frames de Sprites Girando
+        self.frame_girando = 0
+        self.frame_tiempo_girando = 0
+        self.frame_milisegundos_girando = 50
+
+        # Frames Dasheando
+        self.frame_dasheando = 0
+        self.tiempo_de_inicio_dash= 0
+        self.frame_milisegundos_dasheando = 10
+
+        # Saber si se encuentra dasheando o no
+        self.dasheando = False
+        self.ultimo_dash = 0
+        self.tiempo_de_inicio_dash = 0
+        self.cooldown_dash = 1000
+        self.duracion_dash = 200
+        self.distancia_dash = 30
+
         self.tiempo_de_inicio = pg.time.get_ticks()
+        
+        if len(self.frames_ataque) > 0:
+            self.imagen_ataque = self.frames_ataque[0]
 
-        # Cortar los frames para animar correr
-        for i in range(12):
-            frame = self.corriendo.subsurface(i * 64, 0, 64, 64)
-            self.frames_corriendo.append(frame)
-
-    def dibujar(self, ventana):
-        imagen_flip = pg.transform.flip(self.imagen, self.flip, False)
-        ventana.blit(imagen_flip, self.rect.topleft)
 
     def movimiento(self, teclas):
+        # Movimiento Jugador
 
-        # Movimiento horizontal
         mov_x = 0
+        mov_y = 0
+        tiempo_actual = pg.time.get_ticks()
+
         if teclas[pg.K_a]:
             mov_x = -1
+            self.direccion = "IZQUIERDA"
             self.flip = True
+
         if teclas[pg.K_d]:
             mov_x = 1
+            self.direccion = "DERECHA"
             self.flip = False
 
-        # Salto
-        if teclas[pg.K_SPACE] and self.contacto_suelo:
-            self.velocidad_y = -15
-            self.contacto_suelo = False
+        if teclas[pg.K_w] and not self.en_el_aire:
+            self.velocidad_y = self.velocidad_salto
+            self.en_el_aire = True
 
-        # Movimiento horizontal
+        if teclas[pg.K_LSHIFT] and tiempo_actual - self.ultimo_dash > self.cooldown_dash:
+            if not self.dasheando:
+                self.dasheando = True
+                self.ultimo_dash = tiempo_actual
+                self.tiempo_de_inicio_dash = tiempo_actual
+
+        if self.dasheando:
+            tiempo_dash = tiempo_actual - self.tiempo_de_inicio_dash
+            porcentaje_dash = min(tiempo_dash / self.distancia_dash, 1)
+
+            distancia_recorrida = self.distancia_dash * porcentaje_dash
+
+            if self.direccion == "DERECHA":
+                self.rect.x += distancia_recorrida
+            if self.direccion == "IZQUIERDA":
+                self.rect.x -= distancia_recorrida
+            
+            if tiempo_dash >= self.duracion_dash:
+                self.dasheando = False
+
+        if self.en_el_aire:
+            self.velocidad_y += self.gravedad
+        
+        mov_y = self.velocidad_y
+
+        # Ataque
+        if teclas[pg.K_SPACE] and tiempo_actual - self.ultimo_ataque > self.cooldown:
+            if not self.en_el_aire:
+                if not self.atacando:
+                    self.atacando = True
+                    self.ultimo_ataque = tiempo_actual
+                    self.tiempo_de_inicio_ataque = tiempo_actual
+
+        # Movimiento
         self.rect.x += mov_x * self.velocidad
 
-        # Gravedad
-        if not self.contacto_suelo:
-            self.velocidad_y += self.gravedad
-            if self.velocidad_y > 20:
-                self.velocidad_y = 20
-
-        # Movimiento vertical
-        self.rect.y += int(self.velocidad_y)
-
-        # Hitbox
+        self.rect.y += mov_y
         self.hitbox.center = self.rect.center
 
-        # Animacion
-        if mov_x != 0:
-            self.animar_caminando()
+        # Cambiar sprite del Jugador en caso de movimiento o no
+        if not self.dasheando:    
+            if self.en_el_aire:
+                self.animar_giro()
+            else:
+                if mov_x != 0:
+                    self.animar_corriendo()
+                else:
+                    self.imagen = self.sprite_quieto
         else:
-            if self.contacto_suelo:
-                self.imagen = self.quieto
+            self.animar_dash()
+
+        if self.direccion == "DERECHA":
+            self.ataque_hitbox = pg.Rect(self.rect.centerx + 15, self.rect.centery - 48, 64, 64)
+        if self.direccion == "IZQUIERDA":
+            self.ataque_hitbox = pg.Rect(self.rect.centerx - 79, self.rect.centery - 48, 64, 64)
+
+        if self.atacando:
+            self.animar_ataque()
     
-    def animar_caminando(self):
+    def animar_giro(self):
         tiempo_actual = pg.time.get_ticks()
         
-        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos:
-            self.frame = (self.frame + 1) % len(self.frames_corriendo)
-            self.imagen = self.frames_corriendo[self.frame]
+        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_girando:  
+            self.frame_girando = (self.frame_girando + 1) % len(self.frames_girando)
+            self.imagen = self.frames_girando[self.frame_girando]
+            self.tiempo_de_inicio = tiempo_actual
+    
+    def animar_dash(self):
+        tiempo_actual = pg.time.get_ticks()
+        
+        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_dasheando:  
+            self.frame_dasheando = (self.frame_dasheando + 1) % len(self.frames_dasheando)
+            self.imagen = self.frames_dasheando[self.frame_dasheando]
             self.tiempo_de_inicio = tiempo_actual
 
-    def obtener_posicion(self):
-        return (self.hitbox.x, self.hitbox.y)
-    
-    def restablecer_posicion(self, y):
-        self.rect.y = y
-        self.hitbox.center = self.rect.center
-        self.velocidad_y = 0
+    def dibujar_corazones(self, ventana):
+        ventana.blit(self.sprite_salud, (0, 0))
+
+        if self.vida <= 0:
+            self.sprite_salud = self.sprites_corazones[0]
+        elif self.vida <= 10:
+            self.sprite_salud = self.sprites_corazones[1]
+        elif self.vida <= 20:
+            self.sprite_salud = self.sprites_corazones[2]
+        elif self.vida <= 30:
+            self.sprite_salud = self.sprites_corazones[3]
+        elif self.vida <= 40:
+            self.sprite_salud = self.sprites_corazones[4]
+        elif self.vida <= 50:
+            self.sprite_salud = self.sprites_corazones[5]
+        elif self.vida <= 60:
+            self.sprite_salud = self.sprites_corazones[6]
+        elif self.vida <= 70:
+            self.sprite_salud = self.sprites_corazones[7]
+        elif self.vida <= 80:
+            self.sprite_salud = self.sprites_corazones[8]
+        elif self.vida <= 90:
+            self.sprite_salud = self.sprites_corazones[9]
+        else:
+            self.sprite_salud = self.sprites_corazones[10]

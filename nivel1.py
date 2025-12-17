@@ -1,72 +1,95 @@
 import pygame as pg
 import nivel_settings as ns
-from settings import PANTALLA
+
 from jugador import Jugador
+from enemigo import EnemigoPequeno
 from suelo import Suelo
 
 
-def blit_estirado(superficie, pantalla):
-    superficie_escalada = pg.transform.scale(
-        superficie,
-        pantalla.get_size()
-    )
-    pantalla.blit(superficie_escalada, (0, 0))
-
-
 class Nivel1:
+    def __init__(self, pantalla):
+        self.pantalla = pantalla
+        self.reloj = pg.time.Clock()
+        self.running = True
+
     def iniciar(self):
-        pg.init()
 
-        ventana = PANTALLA
+        jugador = Jugador(0, ns.ALTO_NIVEL - 64 - 49)
+        enemigos_pequenos = []
 
-        # Superficie del nivel 
-        surface_juego = pg.Surface((ns.ANCHO_NIVEL, ns.ALTO_NIVEL))
+        largo_mapa = 6
+        suelo = Suelo(largo_mapa)
 
-        # Cargar jugador
-        jugador = Jugador(100, 0)
+        fondo_ancho = 640 * largo_mapa
+        fondo_alto = ns.ALTO_NIVEL
+        fondo = pg.Surface((fondo_ancho, fondo_alto))
 
-        # Posicion inicial
-        jugador.rect.bottom = ns.ALTO_NIVEL - ns.ALTO_SUELO
-        jugador.hitbox.center = jugador.rect.center
-        jugador.contacto_suelo = True
-        jugador.velocidad_y = 0
+        camara_x = 0
 
-        suelo = Suelo()
-        reloj = pg.time.Clock()
+        # OFFSET PARA BAJAR TODO EL NIVEL
+        offset_y = self.pantalla.get_height() - ns.ALTO_NIVEL
 
-        running = True
-        while running:
-            reloj.tick(60)
+        # Enemigos
+        for i in range(400, fondo_ancho, 400):
+            enemigo = EnemigoPequeno(i, ns.ALTO_NIVEL - 64 - 64)
+            enemigos_pequenos.append(enemigo)
+
+        # Fondo
+        sprite_fondo = pg.image.load(
+            "assets/images/fondos/ia_4.png"
+        ).convert()
+
+        for i in range(fondo_ancho // 640):
+            fondo.blit(sprite_fondo, (i * 640, 0))
+
+        # Loop principal
+        while self.running:
+            self.reloj.tick(60)
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    running = False
-
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        running = False
-
-            # Fondo del nivel
-            surface_juego.fill(ns.BACKGROUND)
+                    self.running = False
 
             teclas = pg.key.get_pressed()
+
+            # Cámara
+            camara_x = -jugador.rect.x + 300
+            camara_x = max(camara_x, -(fondo_ancho - ns.ANCHO_NIVEL))
+            camara_x = min(camara_x, 0)
+
+            jugador.rect.x = max(0, min(jugador.rect.x, fondo_ancho - 64 - 300))
+
+            # Dibujado
+            self.pantalla.fill(ns.BACKGROUND)
+            self.pantalla.blit(fondo, (camara_x, offset_y))
+
             jugador.movimiento(teclas)
+            jugador.dibujar(self.pantalla, camara_x, offset_y)
+            jugador.dibujar_corazones(self.pantalla)
 
-            jugador.contacto_suelo = False
+            for enemigo in enemigos_pequenos[:]:
+                if enemigo.vivo:
+                    enemigo.dibujar(self.pantalla, camara_x, offset_y)
+                    enemigo.movimiento(jugador)
 
-            for bloque in suelo.lista_suelos:
-                if jugador.hitbox.colliderect(bloque):
-                    jugador.rect.bottom = bloque.top + 15
-                    jugador.hitbox.center = jugador.rect.center
-                    jugador.velocidad_y = 0
-                    jugador.contacto_suelo = True
-                    break
+                    if jugador.atacando and not jugador.tick_ataque:
+                        if jugador.ataque_hitbox.colliderect(enemigo.hitbox):
+                            enemigo.vida -= jugador.dano
+                            enemigo.tick_dano_recibido = True
 
-            jugador.dibujar(surface_juego)
-            suelo.dibujar_suelo(surface_juego)
+                            if enemigo.vida <= 0:
+                                enemigo.vivo = False
+                                jugador.vida = min(jugador.vida + 20, 100)
 
-            blit_estirado(surface_juego, ventana)
+                            jugador.tick_ataque = True
+                else:
+                    enemigo.muerto()
+                    enemigos_pequenos.remove(enemigo)
+
+            suelo.dibujar_suelo(self.pantalla, camara_x, offset_y)
+
+            for tile in suelo.lista_suelos:
+                if jugador.hitbox.colliderect(tile):
+                    jugador.restablecer_posicion(ns.ALTO_NIVEL - 64 - 49)
 
             pg.display.flip()
-
-        pg.quit()

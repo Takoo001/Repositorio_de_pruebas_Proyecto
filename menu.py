@@ -265,7 +265,7 @@ def opciones_menu():
             overlay.fill((0, 0, 0))
             SUPERFICIE_MENU.blit(overlay, (0, 0))
 
-        # Render final
+        # Render 
         blit_estirado(SUPERFICIE_MENU, PANTALLA)
         MOUSE_POS = mouse_logico_estirado()
 
@@ -321,7 +321,7 @@ def menu():
         for b in botones:
             b.dibujar(SUPERFICIE_MENU)
 
-        # Sprite decorativo
+        # Sprite 
         SUPERFICIE_MENU.blit(
             sprite_lautaro,
             sprite_lautaro.get_rect(center=(ANCHO * 0.65, ALTO * 0.55))
