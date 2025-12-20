@@ -1,10 +1,17 @@
 import pygame as pg
-import nivel_settings as ns
 from entidad import Entidad
+from settings import SONIDO_ATAQUE, VOLUMEN_SFX
 
 class Jugador(Entidad):
     def __init__(self, x, y):
         super().__init__(x, y)
+        self.frame = 0
+        self.frame_ataque = 0
+        
+        # Cargando sonidos nuevos
+        self.sonido_ataque = pg.mixer.Sound("assets/sonidos/ataque.wav")
+        self.sonido_dano = pg.mixer.Sound("assets/sonidos/dano_jugador.ogg")
+
         # Sprites
         self.sprite_girando = pg.image.load("assets/images/personajes/giro_aire.png").convert_alpha()
         self.sprite_dash = pg.image.load("assets/images/personajes/dash.png").convert_alpha()
@@ -44,7 +51,7 @@ class Jugador(Entidad):
 
         # Frames Dasheando
         self.frame_dasheando = 0
-        self.tiempo_de_inicio_dash= 0
+        self.tiempo_de_inicio_dash = 0
         self.frame_milisegundos_dasheando = 10
 
         # Saber si se encuentra dasheando o no
@@ -56,14 +63,11 @@ class Jugador(Entidad):
         self.distancia_dash = 30
 
         self.tiempo_de_inicio = pg.time.get_ticks()
-        
+
         if len(self.frames_ataque) > 0:
             self.imagen_ataque = self.frames_ataque[0]
 
-
     def movimiento(self, teclas):
-        # Movimiento Jugador
-
         mov_x = 0
         mov_y = 0
         tiempo_actual = pg.time.get_ticks()
@@ -91,38 +95,36 @@ class Jugador(Entidad):
         if self.dasheando:
             tiempo_dash = tiempo_actual - self.tiempo_de_inicio_dash
             porcentaje_dash = min(tiempo_dash / self.distancia_dash, 1)
-
             distancia_recorrida = self.distancia_dash * porcentaje_dash
 
             if self.direccion == "DERECHA":
                 self.rect.x += distancia_recorrida
             if self.direccion == "IZQUIERDA":
                 self.rect.x -= distancia_recorrida
-            
+
             if tiempo_dash >= self.duracion_dash:
                 self.dasheando = False
 
         if self.en_el_aire:
             self.velocidad_y += self.gravedad
-        
+
         mov_y = self.velocidad_y
 
-        # Ataque
+        # Sonido de ataque
         if teclas[pg.K_SPACE] and tiempo_actual - self.ultimo_ataque > self.cooldown:
-            if not self.en_el_aire:
-                if not self.atacando:
-                    self.atacando = True
-                    self.ultimo_ataque = tiempo_actual
-                    self.tiempo_de_inicio_ataque = tiempo_actual
+            if not self.en_el_aire and not self.atacando:
+                self.atacando = True
+                self.ultimo_ataque = tiempo_actual
+                self.tiempo_de_inicio_ataque = tiempo_actual
 
-        # Movimiento
+                self.sonido_ataque.set_volume(VOLUMEN_SFX)
+                self.sonido_ataque.play()
+
         self.rect.x += mov_x * self.velocidad
-
         self.rect.y += mov_y
         self.hitbox.center = self.rect.center
 
-        # Cambiar sprite del Jugador en caso de movimiento o no
-        if not self.dasheando:    
+        if not self.dasheando:
             if self.en_el_aire:
                 self.animar_giro()
             else:
@@ -135,50 +137,55 @@ class Jugador(Entidad):
 
         if self.direccion == "DERECHA":
             self.ataque_hitbox = pg.Rect(self.rect.centerx + 15, self.rect.centery - 48, 64, 64)
-        if self.direccion == "IZQUIERDA":
+        else:
             self.ataque_hitbox = pg.Rect(self.rect.centerx - 79, self.rect.centery - 48, 64, 64)
 
         if self.atacando:
             self.animar_ataque()
-    
-    def animar_giro(self):
-        tiempo_actual = pg.time.get_ticks()
-        
-        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_girando:  
-            self.frame_girando = (self.frame_girando + 1) % len(self.frames_girando)
-            self.imagen = self.frames_girando[self.frame_girando]
-            self.tiempo_de_inicio = tiempo_actual
-    
-    def animar_dash(self):
-        tiempo_actual = pg.time.get_ticks()
-        
-        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_dasheando:  
-            self.frame_dasheando = (self.frame_dasheando + 1) % len(self.frames_dasheando)
-            self.imagen = self.frames_dasheando[self.frame_dasheando]
-            self.tiempo_de_inicio = tiempo_actual
+
+    # Sonido de daño 
+    def recibir_dano(self, cantidad):
+        self.vida -= cantidad
+        self.sonido_dano.set_volume(VOLUMEN_SFX)
+        self.sonido_dano.play()
 
     def dibujar_corazones(self, ventana):
         ventana.blit(self.sprite_salud, (0, 0))
+        self.sprite_salud = self.sprites_corazones[min(self.vida // 10, 10)]
 
-        if self.vida <= 0:
-            self.sprite_salud = self.sprites_corazones[0]
-        elif self.vida <= 10:
-            self.sprite_salud = self.sprites_corazones[1]
-        elif self.vida <= 20:
-            self.sprite_salud = self.sprites_corazones[2]
-        elif self.vida <= 30:
-            self.sprite_salud = self.sprites_corazones[3]
-        elif self.vida <= 40:
-            self.sprite_salud = self.sprites_corazones[4]
-        elif self.vida <= 50:
-            self.sprite_salud = self.sprites_corazones[5]
-        elif self.vida <= 60:
-            self.sprite_salud = self.sprites_corazones[6]
-        elif self.vida <= 70:
-            self.sprite_salud = self.sprites_corazones[7]
-        elif self.vida <= 80:
-            self.sprite_salud = self.sprites_corazones[8]
-        elif self.vida <= 90:
-            self.sprite_salud = self.sprites_corazones[9]
-        else:
-            self.sprite_salud = self.sprites_corazones[10]
+    def animar_corriendo(self):
+        tiempo_actual = pg.time.get_ticks()
+
+        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_corriendo:
+            self.frame = (self.frame + 1) % len(self.frames_corriendo)
+            self.imagen = self.frames_corriendo[self.frame]
+            self.tiempo_de_inicio = tiempo_actual
+
+    def animar_ataque(self):
+        tiempo_actual = pg.time.get_ticks()
+
+        if tiempo_actual - self.tiempo_de_inicio_ataque > self.frame_milisegundos_ataque:
+            self.frame_ataque += 1
+            self.tiempo_de_inicio_ataque = tiempo_actual
+
+            if self.frame_ataque >= len(self.frames_ataque):
+                self.frame_ataque = 0
+                self.atacando = False
+            else:
+                self.imagen = self.frames_ataque[self.frame_ataque]
+
+    def animar_giro(self):
+        tiempo_actual = pg.time.get_ticks()
+
+        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_girando:
+            self.frame_girando = (self.frame_girando + 1) % len(self.frames_girando)
+            self.imagen = self.frames_girando[self.frame_girando]
+            self.tiempo_de_inicio = tiempo_actual
+
+    def animar_dash(self):
+        tiempo_actual = pg.time.get_ticks()
+
+        if tiempo_actual - self.tiempo_de_inicio > self.frame_milisegundos_dasheando:
+            self.frame_dasheando = (self.frame_dasheando + 1) % len(self.frames_dasheando)
+            self.imagen = self.frames_dasheando[self.frame_dasheando]
+            self.tiempo_de_inicio = tiempo_actual

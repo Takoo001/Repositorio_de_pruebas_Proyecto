@@ -6,7 +6,7 @@ class Suelo(pg.sprite.Sprite):
         super().__init__()
 
         self.largo_suelos = largo_suelos
-        self.sprite_suelo = pg.image.load("assets/images/entorno/suelo_cesped.png")
+        self.sprite_suelo = pg.image.load("assets/sprites_suelo/suelo_cesped_oscuro.png")
         self.lista_suelos = []
 
         for x in range(0, ns.ANCHO_NIVEL * largo_suelos, 64):

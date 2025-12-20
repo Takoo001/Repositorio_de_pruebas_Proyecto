@@ -1,5 +1,4 @@
 import pygame as pg
-import nivel_settings as ns
 
 class Entidad(pg.sprite.Sprite):
     def __init__(self, x, y):
@@ -29,7 +28,7 @@ class Entidad(pg.sprite.Sprite):
         self.sprite_corriendo = pg.image.load("assets/images/personajes/lautaro_corriendo.png").convert_alpha()
         self.imagen = self.sprite_quieto
         self.sprite_ataque = pg.image.load("assets/images/personajes/ataque_prueba.png").convert_alpha()
-        self.imagen_ataque = pg.image.load("assets/images/personajes/giro_aire.png").convert_alpha()
+        self.imagen_ataque = pg.image.load("assets/images/personajes/ataque_prueba.png").convert_alpha()
 
         self.frames_corriendo = self.recortar_frames(self.sprite_corriendo, 12, 64, 64)
         self.frames_ataque = self.recortar_frames(self.sprite_ataque, 7, 64, 64)
